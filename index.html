@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Birthday Wisher</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; font-family: 'Segoe UI', 'Poppins', cursive; color: #fff3e6; overflow-x: hidden; min-height: 100vh; }
+    .mode-selector { position: fixed; top: 10px; right: 10px; z-index: 2000; background: rgba(0,0,0,0.7); padding: 8px 15px; border-radius: 50px; backdrop-filter: blur(10px); }
+    .mode-selector button { background: #4d68ff; border: none; padding: 6px 12px; border-radius: 30px; color: white; margin: 0 5px; cursor: pointer; }
+    .upgrade-btn { background: gold; color: black; margin-left: 10px; }
+    #countdown { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at center, #1a0010, #000000); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; text-align: center; backdrop-filter: blur(2px); }
+    .countdown-title { font-size: 2.5rem; background: linear-gradient(135deg, #99acff, #4d50ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .timer { font-size: 3rem; font-family: monospace; background: rgba(0,0,0,0.6); padding: 1rem 2rem; border-radius: 60px; margin: 20px; }
+    .enter-btn { margin-top: 2rem; padding: 14px 38px; background: linear-gradient(45deg, #4d6eff, #99a3ff); border: none; border-radius: 50px; color: white; cursor: pointer; font-size: 1.2rem; }
+    #intro { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at center, #1a0010, #000000); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+    #intro h1 { font-size: 3rem; background: linear-gradient(135deg, #99c5ff, #4d59ff); -webkit-background-clip: text; background-clip: text; color: transparent; text-align: center; padding: 0 20px; }
+    .container { display: none; position: relative; min-height: 100vh; padding: 30px 20px; background: rgba(0,0,0,0.7); z-index: 2; text-align: center; }
+    .watermark-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+    .watermark-text { position: absolute; white-space: nowrap; font-size: 1.6rem; color: rgba(255,200,220,0.15); font-family: 'Dancing Script', cursive; animation: floatWatermark 20s linear infinite; }
+    @keyframes floatWatermark { 0% { transform: translateY(0px) rotate(-5deg); } 100% { transform: translateY(-50px) rotate(-3deg); } }
+    .story-block { max-width: 650px; margin: 20px auto; background: rgba(255,77,136,0.15); backdrop-filter: blur(12px); padding: 20px; border-radius: 60px; font-size: 1.6rem; opacity: 0; transform: translateY(40px); transition: 1s ease; }
+    .story-block.visible { opacity: 1; transform: translateY(0); }
+    button { padding: 12px 28px; background: linear-gradient(95deg, #4d8bff, #99b9ff); border: none; border-radius: 50px; color: white; cursor: pointer; }
+    #proposal { display: none; background: rgba(0,0,0,0.5); padding: 30px; border-radius: 70px; max-width: 500px; margin: 40px auto; }
+    .ring { font-size: 6rem; animation: ringGlow 1.5s infinite alternate; }
+    @keyframes ringGlow { 0% { text-shadow: 0 0 10px gold; } 100% { text-shadow: 0 0 30px #ffd700; } }
+    #noBtn { margin-left: 20px; background: #333; position: relative; }
+    .video-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 300; justify-content: center; align-items: center; }
+    #cakeVideo { max-width: 100%; max-height: 100%; }
+    #images { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 200; }
+    #images img { position: absolute; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 2s ease; }
+    #images img.active { opacity: 1; }
+    .slideshow-text { position: fixed; bottom: 20%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); padding: 14px 28px; border-radius: 60px; color: #ffd966; z-index: 250; white-space: nowrap; }
+    .ad-container { text-align: center; margin: 20px auto; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 20px; }
+    .edit-panel { background: rgba(0,0,0,0.95); padding: 20px; border-radius: 30px; margin: 80px auto 20px; max-width: 600px; text-align: left; }
+    .edit-panel label { display: block; margin: 15px 0 5px; font-weight: bold; color: #a099ff; }
+    .edit-panel input, .edit-panel textarea { width: 100%; padding: 10px; border-radius: 10px; border: none; background: #333; color: white; margin-bottom: 10px; }
+    .file-picker-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .file-picker-row input { flex: 1; }
+    .image-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+    .image-upload-card { background: #222; padding: 10px; border-radius: 15px; text-align: center; }
+    .image-upload-card img { width: 100%; height: 100px; object-fit: cover; border-radius: 10px; margin-bottom: 5px; }
+    .confetti { position: fixed; top: -20px; font-size: 1.8rem; pointer-events: none; z-index: 999; animation: fallConfetti linear forwards; }
+    @keyframes fallConfetti { to { transform: translateY(110vh) rotate(360deg); opacity: 0; } }
+    @keyframes floatUp { 0% { transform: translateY(0); opacity: 0.7; } 100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; } }
+    @media (max-width: 600px) { .story-block { font-size: 1.2rem; } .slideshow-text { font-size: 1.2rem; white-space: normal; width: 90%; } .timer { font-size: 1.8rem; } .countdown-title { font-size: 1.8rem; } .edit-panel { margin-top: 70px; } }
+  </style>
+</head>
+<body>
+  <div class="mode-selector">
+    <button id="btnNormalMode">🎂 Normal Mode</button>
+    <button id="btnEditMode">✏️ Edit Mode</button>
+    <button id="upgradeAdFreeBtn" class="upgrade-btn">⭐ Upgrade to Ad-Free</button>
+  </div>
+
+  <!-- Normal Mode UI -->
+  <div id="countdown">
+    <div class="countdown-title">🎂 Birthday Celebration 🎂</div>
+    <div class="timer"><span id="days">00</span>d : <span id="hours">00</span>h : <span id="minutes">00</span>m : <span id="seconds">00</span>s</div>
+    <div class="message">✨ Set your birthday date in Edit Mode ✨</div>
+    <button class="enter-btn" id="enterCountdownBtn" onclick="checkAndEnter()">✨ Enter Celebration ✨</button>
+  </div>
+
+  <div id="intro">
+    <h1 id="introText">✨ For My Dearest Love ✨</h1>
+    <button id="enterBtn" onclick="enterSite()">🌸 Enter The Magic 🌸</button>
+  </div>
+
+  <div class="container" id="main">
+    <div id="watermarkWrapper" class="watermark-bg"></div>
+    <h1 id="mainHeading">💗 A Special Message For You 💗</h1>
+    <div id="story"></div>
+    <button id="startBtn" onclick="startParty()">🎂 Let's Celebrate 🎉</button>
+    <div id="proposal">
+      <div class="ring">💐 💍 💐</div>
+      <h2 id="proposalText">🌹 Will you be mine forever? 🌹</h2>
+      <button onclick="yesClicked()">Yes ❤️ Forever</button>
+      <button id="noBtn" onmouseover="moveNo(event)" ontouchstart="moveNo(event)">🌸 Chase me first 🌸</button>
+    </div>
+    <div id="adBanner" class="ad-container" style="display: none;">📢 Advertisement Space</div>
+  </div>
+
+  <div class="video-container" id="videoContainer">
+    <video id="cakeVideo" controls autoplay muted playsinline><source src="" type="video/mp4"></video>
+  </div>
+  <div id="images"></div>
+  <audio id="bgMusic" loop><source src="" id="musicSource"></audio>
+
+  <!-- Edit Mode Panel -->
+  <div id="editModePanel" style="display: none;">
+    <div class="edit-panel">
+      <h2 style="text-align:center;">✏️ Customize Your Birthday Wish</h2>
+      
+      <label>🎂 Birthday Date & Time</label>
+      <input type="date" id="editDate"><br>
+      <input type="time" id="editTime">
+      
+      <label>💬 Story Messages (one per line)</label>
+      <textarea id="editStoryMessages" rows="5"></textarea>
+      <button id="addStoryMsgBtn">➕ Add Line</button>
+      
+      <label>📸 Slideshow Romantic Texts (one per line)</label>
+      <textarea id="editSlideshowTexts" rows="3"></textarea>
+      
+      <label>💧 Watermark Texts (one per line)</label>
+      <textarea id="editWatermarkTexts" rows="2"></textarea>
+      
+      <label>🎤 Intro Heading</label>
+      <input type="text" id="editIntroHeading">
+      <label>🏷️ Main Heading</label>
+      <input type="text" id="editMainHeading">
+      <label>💍 Proposal Question</label>
+      <input type="text" id="editProposalQuestion">
+      
+      <label>📽️ Video (URL or Upload from Device)</label>
+      <div class="file-picker-row">
+        <input type="text" id="editVideoUrl" placeholder="Video URL (MP4)">
+        <input type="file" id="videoFilePicker" accept="video/*">
+      </div>
+      
+      <label>🎵 Music (URL or Upload from Device)</label>
+      <div class="file-picker-row">
+        <input type="text" id="editMusicUrl" placeholder="Music URL (MP3)">
+        <input type="file" id="musicFilePicker" accept="audio/*">
+      </div>
+      
+      <label>🖼️ 12 Images (URL or Upload)</label>
+      <div id="editImagesGrid" class="image-upload-grid"></div>
+      
+      <!-- Export / Import Buttons -->
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button id="exportSettingsLinkBtn" style="background:#2196F3; flex:1;">🔗 Export as Link (Text Only)</button>
+        <button id="importSettingsFileBtn" style="background:#FF9800; flex:1;">📥 Import from File (Full Backup)</button>
+      </div>
+      <button id="exportStandaloneBtn" style="background:#9C27B0; width:100%; margin-top:10px;">📤 Export as Web Page (Share Only)</button>
+      <input type="file" id="importFileInput" accept=".json" style="display:none;">
+      
+      <button id="saveSettingsBtn" style="background:#28a745; width:100%; margin-top:20px;">💾 Save All Settings</button>
+    </div>
+  </div>
+
+  <script>
+    const isNative = typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform();
+    let admob = null;
+    if (isNative && Capacitor.Plugins && Capacitor.Plugins.AdMob) admob = Capacitor.Plugins.AdMob;
+
+    const STORAGE_KEYS = {
+      BIRTHDAY_DATE: 'birthday_date', STORY_MESSAGES: 'story_messages', SLIDESHOW_TEXTS: 'slideshow_texts',
+      WATERMARK_TEXTS: 'watermark_texts', INTRO_HEADING: 'intro_heading', MAIN_HEADING: 'main_heading',
+      PROPOSAL_QUESTION: 'proposal_question', VIDEO_URL: 'video_url', MUSIC_URL: 'music_url',
+      IMAGES_URLS: 'images_urls', AD_FREE: 'ad_free', AD_FREE_EXPIRY: 'ad_free_expiry'
+    };
+    const DEFAULT_STORY = ["Let me tell you something from the heart... 😌","The moment I first saw you, something shifted in my universe. ✨","Happy Birthday, my love! 🌹💖"];
+    const DEFAULT_SLIDESHOW = ["🎈 HAPPY BIRTHDAY 🎈","💖 You are amazing 💖"];
+    const DEFAULT_WATERMARK = ["Happy Birthday 🎂","Best Wishes 🎉"];
+    const DEFAULT_INTRO = "✨ For My Dearest Love ✨";
+    const DEFAULT_MAIN = "💗 A Special Message For You 💗";
+    const DEFAULT_PROPOSAL = "🌹 Will you be mine forever? 🌹";
+    const DEFAULT_IMAGES = Array(12).fill("");
+
+    let adMobInitialized = false, currentAdFreeStatus = false;
+
+    function loadSettings() {
+      let s = {};
+      s.birthdayDate = localStorage.getItem(STORAGE_KEYS.BIRTHDAY_DATE) || new Date(Date.now()+86400000).toISOString();
+      s.storyMessages = JSON.parse(localStorage.getItem(STORAGE_KEYS.STORY_MESSAGES) || JSON.stringify(DEFAULT_STORY));
+      s.slideshowTexts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SLIDESHOW_TEXTS) || JSON.stringify(DEFAULT_SLIDESHOW));
+      s.watermarkTexts = JSON.parse(localStorage.getItem(STORAGE_KEYS.WATERMARK_TEXTS) || JSON.stringify(DEFAULT_WATERMARK));
+      s.introHeading = localStorage.getItem(STORAGE_KEYS.INTRO_HEADING) || DEFAULT_INTRO;
+      s.mainHeading = localStorage.getItem(STORAGE_KEYS.MAIN_HEADING) || DEFAULT_MAIN;
+      s.proposalQuestion = localStorage.getItem(STORAGE_KEYS.PROPOSAL_QUESTION) || DEFAULT_PROPOSAL;
+      s.videoUrl = localStorage.getItem(STORAGE_KEYS.VIDEO_URL) || "";
+      s.musicUrl = localStorage.getItem(STORAGE_KEYS.MUSIC_URL) || "";
+      s.imagesUrls = JSON.parse(localStorage.getItem(STORAGE_KEYS.IMAGES_URLS) || JSON.stringify(DEFAULT_IMAGES));
+      s.adFree = localStorage.getItem(STORAGE_KEYS.AD_FREE) === 'true';
+      s.adFreeExpiry = localStorage.getItem(STORAGE_KEYS.AD_FREE_EXPIRY) || null;
+      return s;
+    }
+
+    function saveAllSettings(s) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.BIRTHDAY_DATE, s.birthdayDate);
+        localStorage.setItem(STORAGE_KEYS.STORY_MESSAGES, JSON.stringify(s.storyMessages));
+        localStorage.setItem(STORAGE_KEYS.SLIDESHOW_TEXTS, JSON.stringify(s.slideshowTexts));
+        localStorage.setItem(STORAGE_KEYS.WATERMARK_TEXTS, JSON.stringify(s.watermarkTexts));
+        localStorage.setItem(STORAGE_KEYS.INTRO_HEADING, s.introHeading);
+        localStorage.setItem(STORAGE_KEYS.MAIN_HEADING, s.mainHeading);
+        localStorage.setItem(STORAGE_KEYS.PROPOSAL_QUESTION, s.proposalQuestion);
+        localStorage.setItem(STORAGE_KEYS.VIDEO_URL, s.videoUrl);
+        localStorage.setItem(STORAGE_KEYS.MUSIC_URL, s.musicUrl);
+        localStorage.setItem(STORAGE_KEYS.IMAGES_URLS, JSON.stringify(s.imagesUrls));
+        localStorage.setItem(STORAGE_KEYS.AD_FREE, s.adFree);
+        if(s.adFreeExpiry) localStorage.setItem(STORAGE_KEYS.AD_FREE_EXPIRY, s.adFreeExpiry);
+        else localStorage.removeItem(STORAGE_KEYS.AD_FREE_EXPIRY);
+        alert("Settings saved! App will reload.");
+        location.reload();
+      } catch(e) { alert("Save failed. Images too large? Use smaller images."); }
+    }
+
+    function compressImage(file, maxSize=800, quality=0.7) {
+      return new Promise((resolve,reject)=>{
+        const reader = new FileReader();
+        reader.onload = e=>{
+          const img = new Image();
+          img.onload = ()=>{
+            let w=img.width, h=img.height;
+            if(w>maxSize||h>maxSize){ if(w>h){ h = h*maxSize/w; w=maxSize; } else { w = w*maxSize/h; h=maxSize; } }
+            const canvas = document.createElement('canvas');
+            canvas.width=w; canvas.height=h;
+            canvas.getContext('2d').drawImage(img,0,0,w,h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror=reject;
+          img.src=e.target.result;
+        };
+        reader.onerror=reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function populateEditForm(settings) {
+      const dateObj = new Date(settings.birthdayDate);
+      document.getElementById('editDate').value = dateObj.toISOString().split('T')[0];
+      document.getElementById('editTime').value = dateObj.toTimeString().slice(0,5);
+      document.getElementById('editStoryMessages').value = settings.storyMessages.join('\n');
+      document.getElementById('editSlideshowTexts').value = settings.slideshowTexts.join('\n');
+      document.getElementById('editWatermarkTexts').value = settings.watermarkTexts.join('\n');
+      document.getElementById('editIntroHeading').value = settings.introHeading;
+      document.getElementById('editMainHeading').value = settings.mainHeading;
+      document.getElementById('editProposalQuestion').value = settings.proposalQuestion;
+      document.getElementById('editVideoUrl').value = settings.videoUrl;
+      document.getElementById('editMusicUrl').value = settings.musicUrl;
+      const grid = document.getElementById('editImagesGrid');
+      grid.innerHTML = '';
+      for(let i=0;i<12;i++){
+        const card = document.createElement('div'); card.className='image-upload-card';
+        const img = document.createElement('img');
+        img.src = settings.imagesUrls[i] || 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23333%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23fff%22%20text-anchor%3D%22middle%22%3E%3C%2Ftext%3E%3C%2Fsvg%3E';
+        const input = document.createElement('input'); input.type='text'; input.placeholder=`Image ${i+1} URL`; input.value=settings.imagesUrls[i];
+        input.addEventListener('change',(e)=>{ let urls=[...settings.imagesUrls]; urls[i]=e.target.value; settings.imagesUrls=urls; img.src=e.target.value||'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23333%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23fff%22%20text-anchor%3D%22middle%22%3E%3C%2Ftext%3E%3C%2Fsvg%3E'; });
+        const fileInput = document.createElement('input'); fileInput.type='file'; fileInput.accept='image/*'; fileInput.style.marginTop='5px';
+        fileInput.addEventListener('change', async (e)=>{ const file=e.target.files[0]; if(file){ try{ const dataUrl=await compressImage(file,800,0.7); input.value=dataUrl; img.src=dataUrl; let urls=[...settings.imagesUrls]; urls[i]=dataUrl; settings.imagesUrls=urls; }catch(err){ alert("Image compression failed"); } } });
+        card.appendChild(img); card.appendChild(input); card.appendChild(fileInput);
+        grid.appendChild(card);
+      }
+    }
+
+    document.getElementById('videoFilePicker')?.addEventListener('change', e => { const file=e.target.files[0]; if(file){ const reader=new FileReader(); reader.onload=ev=>document.getElementById('editVideoUrl').value=ev.target.result; reader.readAsDataURL(file); } });
+    document.getElementById('musicFilePicker')?.addEventListener('change', e => { const file=e.target.files[0]; if(file){ const reader=new FileReader(); reader.onload=ev=>document.getElementById('editMusicUrl').value=ev.target.result; reader.readAsDataURL(file); } });
+
+    document.getElementById('exportSettingsLinkBtn').onclick = () => {
+      const s=loadSettings();
+      const exportData = { birthdayDate:s.birthdayDate, storyMessages:s.storyMessages, slideshowTexts:s.slideshowTexts, watermarkTexts:s.watermarkTexts, introHeading:s.introHeading, mainHeading:s.mainHeading, proposalQuestion:s.proposalQuestion, videoUrl:s.videoUrl, musicUrl:s.musicUrl };
+      const base64=btoa(unescape(encodeURIComponent(JSON.stringify(exportData))));
+      const link=`birthdaywisher://import?data=${base64}`;
+      navigator.clipboard.writeText(link).then(()=>{ if(navigator.share) navigator.share({title:'Birthday Wisher Settings',text:'Tap to apply custom settings',url:link}).catch(()=>alert('Link copied to clipboard!\n'+link)); else alert('Link copied to clipboard!\n'+link); }).catch(()=>alert('Copy failed. Use Import from File.'));
+    };
+    document.getElementById('importSettingsFileBtn').onclick = ()=>document.getElementById('importFileInput').click();
+    document.getElementById('importFileInput').onchange = event => { const file=event.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>{ try{ const imported=JSON.parse(e.target.result); if(imported.storyMessages && imported.imagesUrls) saveAllSettings(imported); else alert('Invalid file'); }catch(err){ alert('Parse error'); } }; reader.readAsText(file); document.getElementById('importFileInput').value=''; };
+    window.loadImportedSettings = (base64Data)=>{ try{ const jsonStr=decodeURIComponent(escape(atob(base64Data))); const partial=JSON.parse(jsonStr); const full=loadSettings(); Object.assign(full,partial); saveAllSettings(full); }catch(e){ alert('Invalid link'); } };
+
+    // Fixed generateStandaloneHtml function (no template literal errors)
+    function generateStandaloneHtml(s) {
+      const esc = JSON.stringify;
+      // Use a single template literal; escape any backticks inside the generated script by using string concatenation for the closing script tag.
+      const innerScript = `
+        const targetDate = new Date(${JSON.stringify(s.birthdayDate)});
+        const storyMessages = ${JSON.stringify(s.storyMessages)};
+        const slideshowTexts = ${JSON.stringify(s.slideshowTexts)};
+        const watermarkTexts = ${JSON.stringify(s.watermarkTexts)};
+        const imageUrls = ${JSON.stringify(s.imagesUrls)};
+        const videoUrl = ${JSON.stringify(s.videoUrl)};
+        const musicUrl = ${JSON.stringify(s.musicUrl)};
+        let currentStoryIndex=0, countdownInterval, confettiInterval, heartInterval;
+        function buildStoryBlocks(){ const storyDiv=document.getElementById('story'); storyDiv.innerHTML=''; storyMessages.forEach((msg,idx)=>{ let b=document.createElement('div'); b.className='story-block'; b.id='storyBlock'+idx; storyDiv.appendChild(b); }); }
+        function typeWriterEffect(el,txt,cb){ let i=0; el.innerHTML=''; function typing(){ if(i<txt.length){ el.innerHTML+=txt[i]; i++; setTimeout(typing,35); } else if(cb) cb(); } typing(); }
+        function displayNextStory(){ if(currentStoryIndex<storyMessages.length){ const block=document.getElementById('storyBlock'+currentStoryIndex); block.classList.add('visible'); typeWriterEffect(block,storyMessages[currentStoryIndex],()=>{ currentStoryIndex++; setTimeout(displayNextStory,700); }); } else { document.getElementById('startBtn').style.display='none'; document.getElementById('proposal').style.display='block'; } }
+        function createWatermarkText(){ const container=document.getElementById('watermarkWrapper'); container.innerHTML=''; const max=Math.min(watermarkTexts.length*2,30); for(let i=0;i<max;i++){ const span=document.createElement('div'); span.className='watermark-text'; span.innerText=watermarkTexts[i%watermarkTexts.length]; span.style.left=Math.random()*100+'%'; span.style.top=Math.random()*100+'%'; span.style.fontSize=(1+Math.random()*1.5)+'rem'; span.style.opacity=0.08+Math.random()*0.1; span.style.animationDuration=(15+Math.random()*15)+'s'; container.appendChild(span); } }
+        function setupSlideshowImages(){ const container=document.getElementById('images'); container.innerHTML=''; for(let i=0;i<12;i++){ const img=document.createElement('img'); img.src=imageUrls[i]||'data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%2322002a'/%3E%3Ctext x='50%25' y='50%25' fill='%23ff99cc' text-anchor='middle' dy='.3em'%3E📸 Image '+(i+1)+'%3C/text%3E%3C/svg%3E'; img.alt='Memory '+(i+1); container.appendChild(img); } }
+        function startCountdown(){ function update(){ const now=new Date(); const diff=targetDate-now; if(diff<=0){ document.getElementById('countdown').style.display='none'; document.getElementById('intro').style.display='flex'; clearInterval(countdownInterval); return; } const days=Math.floor(diff/(86400000)); const hours=Math.floor((diff%86400000)/3600000); const minutes=Math.floor((diff%3600000)/60000); const seconds=Math.floor((diff%60000)/1000); document.getElementById('days').innerText=String(days).padStart(2,'0'); document.getElementById('hours').innerText=String(hours).padStart(2,'0'); document.getElementById('minutes').innerText=String(minutes).padStart(2,'0'); document.getElementById('seconds').innerText=String(seconds).padStart(2,'0'); } update(); countdownInterval=setInterval(update,1000); }
+        window.checkAndEnter=function(){ if(new Date()>=targetDate){ document.getElementById('countdown').style.display='none'; document.getElementById('intro').style.display='flex'; } else alert('Celebration at: '+targetDate.toLocaleString()); };
+        window.enterSite=function(){ document.getElementById('intro').style.display='none'; document.getElementById('main').style.display='block'; startHeartRain(); };
+        function startHeartRain(){ if(heartInterval) clearInterval(heartInterval); heartInterval=setInterval(()=>{ const h=document.createElement('div'); h.innerHTML=Math.random()>0.6?'💖':'🌸'; h.style.position='fixed'; h.style.left=Math.random()*100+'%'; h.style.bottom='-20px'; h.style.fontSize=(Math.random()*18+12)+'px'; h.style.opacity=0.5; h.style.pointerEvents='none'; h.style.zIndex='998'; h.style.animation='floatUp 7s ease-out forwards'; document.body.appendChild(h); setTimeout(()=>h.remove(),7000); },800); }
+        window.startParty=function(){ document.getElementById('startBtn').style.display='none'; const music=document.getElementById('bgMusic'); if(musicUrl) music.play().catch(e=>console.log); startConfettiRain(); displayNextStory(); };
+        function startConfettiRain(){ if(confettiInterval) clearInterval(confettiInterval); confettiInterval=setInterval(()=>{ for(let i=0;i<3;i++){ const conf=document.createElement('div'); conf.className='confetti'; conf.innerHTML=['💖','🌹','🎀','✨','🎂'][Math.floor(Math.random()*5)]; conf.style.left=Math.random()*100+'%'; conf.style.fontSize=(Math.random()*24+14)+'px'; conf.style.animationDuration=(Math.random()*3+2.5)+'s'; document.body.appendChild(conf); setTimeout(()=>conf.remove(),5000); } },280); }
+        window.moveNo=function(e){ e.preventDefault(); const btn=document.getElementById('noBtn'); const prop=document.getElementById('proposal'); const rect=prop.getBoundingClientRect(); const maxX=rect.width-btn.offsetWidth-20; const maxY=rect.height-btn.offsetHeight-20; btn.style.position='absolute'; btn.style.left=Math.random()*Math.max(0,maxX)+'px'; btn.style.top=Math.random()*Math.max(0,maxY)+'px'; btn.style.marginLeft='0'; };
+        window.yesClicked=function(){ const children=document.querySelectorAll('#main > *'); children.forEach(c=>{ if(!c.classList?.contains('watermark-bg') && c.id!=='watermarkWrapper') c.style.display='none'; }); const vc=document.getElementById('videoContainer'); const video=document.getElementById('cakeVideo'); vc.style.display='flex'; if(videoUrl){ video.src=videoUrl; video.muted=false; video.play(); video.addEventListener('ended',()=>{ vc.style.display='none'; startSlideshowRomance(); }); } else { setTimeout(()=>{ vc.style.display='none'; startSlideshowRomance(); },1000); } };
+        function startSlideshowRomance(){ const ss=document.getElementById('images'); ss.style.display='block'; const imgs=document.querySelectorAll('#images img'); let idx=0; imgs.forEach(i=>i.classList.remove('active')); function next(){ imgs.forEach(i=>i.classList.remove('active')); if(imgs[idx]) imgs[idx].classList.add('active'); idx=(idx+1)%imgs.length; setTimeout(next,3800); } next(); let td=document.querySelector('.slideshow-text'); if(!td){ td=document.createElement('div'); td.className='slideshow-text'; document.body.appendChild(td); } let tidx=0; function upd(){ if(slideshowTexts.length) td.innerText=slideshowTexts[tidx%slideshowTexts.length]; tidx++; } upd(); setInterval(upd,3800); }
+        buildStoryBlocks(); createWatermarkText(); setupSlideshowImages(); startCountdown();
+      `;
+      // Use string concatenation to avoid splitting the script tag
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=yes"><title>Birthday Wish</title><style>
+        *{margin:0;padding:0;box-sizing:border-box;} body{background:#0a0a0a;font-family:'Segoe UI','Poppins',cursive;color:#fff3e6;overflow-x:hidden;min-height:100vh;padding-bottom:40px;}
+        #countdown{position:fixed;width:100%;height:100%;background:radial-gradient(circle at center,#1a0010,#000);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:1000;text-align:center;backdrop-filter:blur(2px);}
+        .countdown-title{font-size:2.5rem;background:linear-gradient(135deg,#ff99cc,#ff4d88);-webkit-background-clip:text;background-clip:text;color:transparent;}
+        .timer{font-size:3rem;font-family:monospace;background:rgba(0,0,0,0.6);padding:1rem 2rem;border-radius:60px;margin:20px;}
+        .enter-btn{margin-top:2rem;padding:14px 38px;background:linear-gradient(45deg,#ff4d88,#ff99cc);border:none;border-radius:50px;color:white;cursor:pointer;font-size:1.2rem;}
+        #intro{position:fixed;width:100%;height:100%;background:radial-gradient(circle at center,#1a0010,#000);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:100;}
+        #intro h1{font-size:3rem;background:linear-gradient(135deg,#ff99cc,#ff4d88);-webkit-background-clip:text;background-clip:text;color:transparent;text-align:center;padding:0 20px;}
+        .container{display:none;position:relative;min-height:100vh;padding:30px 20px;background:rgba(0,0,0,0.7);z-index:2;text-align:center;}
+        .watermark-bg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;}
+        .watermark-text{position:absolute;white-space:nowrap;font-size:1.6rem;color:rgba(255,200,220,0.15);font-family:'Dancing Script',cursive;animation:floatWatermark 20s linear infinite;}
+        @keyframes floatWatermark{0%{transform:translateY(0px) rotate(-5deg);}100%{transform:translateY(-50px) rotate(-3deg);}}
+        .story-block{max-width:650px;margin:20px auto;background:rgba(255,77,136,0.15);backdrop-filter:blur(12px);padding:20px;border-radius:60px;font-size:1.6rem;opacity:0;transform:translateY(40px);transition:1s ease;}
+        .story-block.visible{opacity:1;transform:translateY(0);}
+        button{padding:12px 28px;background:linear-gradient(95deg,#ff4d88,#ff99cc);border:none;border-radius:50px;color:white;cursor:pointer;}
+        #proposal{display:none;background:rgba(0,0,0,0.5);padding:30px;border-radius:70px;max-width:500px;margin:40px auto;}
+        .ring{font-size:6rem;animation:ringGlow 1.5s infinite alternate;}
+        @keyframes ringGlow{0%{text-shadow:0 0 10px gold;}100%{text-shadow:0 0 30px #ffd700;}}
+        #noBtn{margin-left:20px;background:#333;position:relative;}
+        .video-container{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:300;justify-content:center;align-items:center;}
+        #cakeVideo{max-width:100%;max-height:100%;}
+        #images{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:200;}
+        #images img{position:absolute;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 2s ease;}
+        #images img.active{opacity:1;}
+        .slideshow-text{position:fixed;bottom:20%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);padding:14px 28px;border-radius:60px;color:#ffd966;z-index:250;white-space:nowrap;}
+        .confetti{position:fixed;top:-20px;font-size:1.8rem;pointer-events:none;z-index:999;animation:fallConfetti linear forwards;}
+        @keyframes fallConfetti{to{transform:translateY(110vh) rotate(360deg);opacity:0;}}
+        @keyframes floatUp{0%{transform:translateY(0);opacity:0.7;}100%{transform:translateY(-120vh) rotate(360deg);opacity:0;}}
+        @media (max-width:600px){.story-block{font-size:1.2rem;}.slideshow-text{font-size:1.2rem;white-space:normal;width:90%;}.timer{font-size:1.8rem;}.countdown-title{font-size:1.8rem;}}
+        .watermark-footer{position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:12px;font-family:monospace;color:rgba(255,200,220,0.25);background:transparent;pointer-events:none;z-index:9999;letter-spacing:1px;}
+      </style></head><body>
+      <div id="countdown"><div class="countdown-title">🎂 Birthday Celebration 🎂</div><div class="timer"><span id="days">00</span>d : <span id="hours">00</span>h : <span id="minutes">00</span>m : <span id="seconds">00</span>s</div><div class="message">✨ Special for you ✨</div><button class="enter-btn" id="enterCountdownBtn" onclick="checkAndEnter()">✨ Enter Celebration ✨</button></div>
+      <div id="intro"><h1 id="introText">${esc(s.introHeading)}</h1><button id="enterBtn" onclick="enterSite()">🌸 Enter The Magic 🌸</button></div>
+      <div class="container" id="main"><div id="watermarkWrapper" class="watermark-bg"></div><h1 id="mainHeading">${esc(s.mainHeading)}</h1><div id="story"></div><button id="startBtn" onclick="startParty()">🎂 Let's Celebrate 🎉</button><div id="proposal"><div class="ring">💐 💍 💐</div><h2 id="proposalText">${esc(s.proposalQuestion)}</h2><button onclick="yesClicked()">Yes ❤️ Forever</button><button id="noBtn" onmouseover="moveNo(event)" ontouchstart="moveNo(event)">🌸 Chase me first 🌸</button></div></div>
+      <div class="video-container" id="videoContainer"><video id="cakeVideo" controls autoplay muted playsinline><source src="${esc(s.videoUrl)}" type="video/mp4"></video></div>
+      <div id="images"></div><audio id="bgMusic" loop autoplay><source src="${esc(s.musicUrl)}" type="audio/mpeg"></audio>
+      <div class="watermark-footer">🎂 Birthday Wisher App</div>
+      <script>${innerScript}<\/script>
+    </body></html>`;
+    }
+
+    document.getElementById('exportStandaloneBtn').onclick = async () => {
+      const s = loadSettings();
+      const html = generateStandaloneHtml(s);
+      const blob = new Blob([html], { type: 'text/html' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'birthday_wish.html', { type: 'text/html' })] })) {
+        await navigator.share({ title: 'Birthday Wish', files: [new File([blob], 'birthday_wish.html', { type: 'text/html' })] });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'birthday_wish.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert('File downloaded! Share it.');
+      }
+    };
+
+    // Mode switching
+    function setMode(m){
+      if(m==='normal'){ document.getElementById('editModePanel').style.display='none'; document.getElementById('countdown').style.display='flex'; document.getElementById('intro').style.display='none'; document.getElementById('main').style.display='none'; location.reload(); }
+      else { document.getElementById('editModePanel').style.display='block'; document.getElementById('countdown').style.display='none'; document.getElementById('intro').style.display='none'; document.getElementById('main').style.display='none'; populateEditForm(loadSettings()); }
+    }
+    document.getElementById('btnNormalMode').onclick=()=>setMode('normal');
+    document.getElementById('btnEditMode').onclick=()=>setMode('edit');
+
+    // AdMob logic
+    async function initAdMob(){ if(!admob || adMobInitialized) return; try{ await admob.initialize({requestTrackingAuthorization:true,testingDevices:['EMULATOR'],initializeForTesting:true}); adMobInitialized=true; }catch(e){ console.error(e); } }
+    async function showBanner(){ if(!admob || !adMobInitialized || currentAdFreeStatus) return; try{ await admob.showBanner({adId:'ca-app-pub-3940256099942544/6300978111',position:2,isTesting:true}); }catch(e){} }
+    async function showRewarded(){ if(!admob || !adMobInitialized){ alert("AdMob not ready"); return false; } try{ await admob.prepareRewardedVideo({adId:'ca-app-pub-3940256099942544/5224354917',isTesting:true}); await admob.showRewardedVideo(); return new Promise(res=>{ const handler=()=>{ res(true); window.removeEventListener('rewardedVideoReward',handler); }; window.addEventListener('rewardedVideoReward',handler); setTimeout(()=>{ window.removeEventListener('rewardedVideoReward',handler); res(false); },30000); }); }catch(e){ alert("Ad failed"); return false; } }
+    document.getElementById('upgradeAdFreeBtn').onclick = async ()=>{
+      const adFree=localStorage.getItem(STORAGE_KEYS.AD_FREE)==='true';
+      const exp=localStorage.getItem(STORAGE_KEYS.AD_FREE_EXPIRY);
+      if(adFree && exp && Date.now()<parseInt(exp)){ alert("Already Ad-Free!"); return; }
+      if(!isNative){ if(confirm("Simulated upgrade?")){ localStorage.setItem(STORAGE_KEYS.AD_FREE,'true'); localStorage.setItem(STORAGE_KEYS.AD_FREE_EXPIRY,Date.now()+30*24*3600000); alert("Ad-Free for 30 days"); location.reload(); } return; }
+      const success=await showRewarded(); if(success){ localStorage.setItem(STORAGE_KEYS.AD_FREE,'true'); localStorage.setItem(STORAGE_KEYS.AD_FREE_EXPIRY,Date.now()+30*24*3600000); alert("Ad-Free 30 days"); location.reload(); } else alert("Ad not completed");
+    };
+
+    // Normal mode initialization for main app
+    let normalSettings, targetDateMain, storyMessagesMain, slideshowTextsMain, watermarkTextsMain, introHeadingMain, mainHeadingMain, proposalQuestionMain, videoUrlMain, musicUrlMain, imageUrlsMain;
+    let currentStoryIndexMain=0;
+    let countdownIntervalMain, confettiIntervalMain, heartIntervalMain;
+
+    async function initNormalModeMain(){
+      normalSettings=loadSettings();
+      const adFreeFlag=localStorage.getItem(STORAGE_KEYS.AD_FREE)==='true';
+      const exp=localStorage.getItem(STORAGE_KEYS.AD_FREE_EXPIRY);
+      if(adFreeFlag && exp && Date.now()>parseInt(exp)){ localStorage.removeItem(STORAGE_KEYS.AD_FREE); localStorage.removeItem(STORAGE_KEYS.AD_FREE_EXPIRY); currentAdFreeStatus=false; } else currentAdFreeStatus=adFreeFlag;
+      targetDateMain = new Date(normalSettings.birthdayDate);
+      storyMessagesMain = normalSettings.storyMessages;
+      slideshowTextsMain = normalSettings.slideshowTexts;
+      watermarkTextsMain = normalSettings.watermarkTexts;
+      introHeadingMain = normalSettings.introHeading;
+      mainHeadingMain = normalSettings.mainHeading;
+      proposalQuestionMain = normalSettings.proposalQuestion;
+      videoUrlMain = normalSettings.videoUrl;
+      musicUrlMain = normalSettings.musicUrl;
+      imageUrlsMain = normalSettings.imagesUrls;
+      document.getElementById('introText').innerText = introHeadingMain;
+      document.getElementById('mainHeading').innerText = mainHeadingMain;
+      document.getElementById('proposalText').innerText = proposalQuestionMain;
+      const ve = document.getElementById('cakeVideo'); if(videoUrlMain) ve.src = videoUrlMain;
+      const ae = document.getElementById('bgMusic'); if(musicUrlMain) ae.src = musicUrlMain;
+      if(!currentAdFreeStatus && admob){ await initAdMob(); const adDiv=document.getElementById('adBanner'); adDiv.style.display='block'; adDiv.innerHTML='📢 Loading ad...'; await showBanner(); } else document.getElementById('adBanner').style.display='none';
+      buildStoryBlocksMain(); createWatermarkTextMain(); setupSlideshowImagesMain(); startCountdownMain();
+    }
+    function buildStoryBlocksMain(){ const sd=document.getElementById('story'); sd.innerHTML=''; storyMessagesMain.forEach((msg,idx)=>{ let b=document.createElement('div'); b.className='story-block'; b.id=`storyBlockMain${idx}`; sd.appendChild(b); }); }
+    function createWatermarkTextMain(){ const c=document.getElementById('watermarkWrapper'); c.innerHTML=''; const max=Math.min(watermarkTextsMain.length*2,30); for(let i=0;i<max;i++){ const s=document.createElement('div'); s.className='watermark-text'; s.innerText=watermarkTextsMain[i%watermarkTextsMain.length]; s.style.left=Math.random()*100+'%'; s.style.top=Math.random()*100+'%'; s.style.fontSize=(1+Math.random()*1.5)+'rem'; s.style.opacity=0.08+Math.random()*0.1; s.style.animationDuration=(15+Math.random()*15)+'s'; c.appendChild(s); } }
+    function setupSlideshowImagesMain(){ const c=document.getElementById('images'); c.innerHTML=''; for(let i=0;i<12;i++){ const img=document.createElement('img'); img.src=imageUrlsMain[i]||`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%2322002a'/%3E%3Ctext x='50%25' y='50%25' fill='%23ff99cc' text-anchor='middle' dy='.3em'%3E📸 Image ${i+1}%3C/text%3E%3C/svg%3E`; img.alt=`Memory ${i+1}`; c.appendChild(img); } }
+    function startCountdownMain(){ function update(){ const now=new Date(); const diff=targetDateMain-now; if(diff<=0){ document.getElementById('countdown').style.display='none'; document.getElementById('intro').style.display='flex'; clearInterval(countdownIntervalMain); return; } const days=Math.floor(diff/86400000); const hours=Math.floor((diff%86400000)/3600000); const minutes=Math.floor((diff%3600000)/60000); const seconds=Math.floor((diff%60000)/1000); document.getElementById('days').innerText=String(days).padStart(2,'0'); document.getElementById('hours').innerText=String(hours).padStart(2,'0'); document.getElementById('minutes').innerText=String(minutes).padStart(2,'0'); document.getElementById('seconds').innerText=String(seconds).padStart(2,'0'); } update(); countdownIntervalMain=setInterval(update,1000); }
+    window.checkAndEnter = function(){ if(new Date()>=targetDateMain){ document.getElementById('countdown').style.display='none'; document.getElementById('intro').style.display='flex'; } else alert(`Celebration at: ${targetDateMain.toLocaleString()}`); };
+    window.enterSite = function(){ document.getElementById('intro').style.display='none'; document.getElementById('main').style.display='block'; startHeartRainMain(); };
+    function startHeartRainMain(){ if(heartIntervalMain) clearInterval(heartIntervalMain); heartIntervalMain=setInterval(()=>{ const h=document.createElement('div'); h.innerHTML=Math.random()>0.6?'💖':'🌸'; h.style.position='fixed'; h.style.left=Math.random()*100+'%'; h.style.bottom='-20px'; h.style.fontSize=(Math.random()*18+12)+'px'; h.style.opacity=0.5; h.style.pointerEvents='none'; h.style.zIndex='998'; h.style.animation='floatUp 7s ease-out forwards'; document.body.appendChild(h); setTimeout(()=>h.remove(),7000); },800); }
+    function typeWriterEffectMain(el,txt,cb){ let i=0; el.innerHTML=''; function typing(){ if(i<txt.length){ el.innerHTML+=txt[i]; i++; setTimeout(typing,35); } else if(cb) cb(); } typing(); }
+    window.displayNextStoryMain = function(){ if(currentStoryIndexMain<storyMessagesMain.length){ const block=document.getElementById(`storyBlockMain${currentStoryIndexMain}`); block.classList.add('visible'); typeWriterEffectMain(block,storyMessagesMain[currentStoryIndexMain],()=>{ currentStoryIndexMain++; setTimeout(window.displayNextStoryMain,700); }); } else { document.getElementById('startBtn').style.display='none'; document.getElementById('proposal').style.display='block'; } };
+    window.startParty = function(){ document.getElementById('startBtn').style.display='none'; const music=document.getElementById('bgMusic'); if(musicUrlMain) music.play().catch(e=>console.log); startConfettiRainMain(); window.displayNextStoryMain(); };
+    function startConfettiRainMain(){ if(confettiIntervalMain) clearInterval(confettiIntervalMain); confettiIntervalMain=setInterval(()=>{ for(let i=0;i<3;i++){ const c=document.createElement('div'); c.className='confetti'; c.innerHTML=['💖','🌹','🎀','✨','🎂'][Math.floor(Math.random()*5)]; c.style.left=Math.random()*100+'%'; c.style.fontSize=(Math.random()*24+14)+'px'; c.style.animationDuration=(Math.random()*3+2.5)+'s'; document.body.appendChild(c); setTimeout(()=>c.remove(),5000); } },280); }
+    window.moveNo = function(e){ e.preventDefault(); const btn=document.getElementById('noBtn'); const proposal=document.getElementById('proposal'); const rect=proposal.getBoundingClientRect(); const maxX=rect.width-btn.offsetWidth-20; const maxY=rect.height-btn.offsetHeight-20; btn.style.position='absolute'; btn.style.left=Math.random()*Math.max(0,maxX)+'px'; btn.style.top=Math.random()*Math.max(0,maxY)+'px'; btn.style.marginLeft='0'; };
+    window.yesClicked = function(){ const mcs=document.querySelectorAll('#main > *'); mcs.forEach(c=>{ if(!c.classList?.contains('watermark-bg') && c.id!=='watermarkWrapper') c.style.display='none'; }); const vc=document.getElementById('videoContainer'); const video=document.getElementById('cakeVideo'); vc.style.display='flex'; if(videoUrlMain){ video.src=videoUrlMain; video.muted=false; video.play(); video.addEventListener('ended',()=>{ vc.style.display='none'; startSlideshowRomanceMain(); }); } else { setTimeout(()=>{ vc.style.display='none'; startSlideshowRomanceMain(); },1000); } };
+    function startSlideshowRomanceMain(){ const ss=document.getElementById('images'); ss.style.display='block'; const imgs=document.querySelectorAll('#images img'); let idx=0; imgs.forEach(i=>i.classList.remove('active')); function next(){ imgs.forEach(i=>i.classList.remove('active')); if(imgs[idx]) imgs[idx].classList.add('active'); idx=(idx+1)%imgs.length; setTimeout(next,3800); } next(); let td=document.querySelector('.slideshow-text'); if(!td){ td=document.createElement('div'); td.className='slideshow-text'; document.body.appendChild(td); } let tidx=0; function upd(){ if(slideshowTextsMain.length) td.innerText=slideshowTextsMain[tidx%slideshowTextsMain.length]; tidx++; } upd(); setInterval(upd,3800); }
+    document.getElementById('saveSettingsBtn').onclick = () => {
+      const newS = {};
+      const ds = document.getElementById('editDate').value, ts = document.getElementById('editTime').value;
+      newS.birthdayDate = new Date(`${ds}T${ts}:00`).toISOString();
+      newS.storyMessages = document.getElementById('editStoryMessages').value.split('\n').filter(l=>l.trim());
+      newS.slideshowTexts = document.getElementById('editSlideshowTexts').value.split('\n').filter(l=>l.trim());
+      newS.watermarkTexts = document.getElementById('editWatermarkTexts').value.split('\n').filter(l=>l.trim());
+      newS.introHeading = document.getElementById('editIntroHeading').value;
+      newS.mainHeading = document.getElementById('editMainHeading').value;
+      newS.proposalQuestion = document.getElementById('editProposalQuestion').value;
+      newS.videoUrl = document.getElementById('editVideoUrl').value;
+      newS.musicUrl = document.getElementById('editMusicUrl').value;
+      const imgInputs = document.querySelectorAll('#editImagesGrid input[type="text"]');
+      newS.imagesUrls = Array.from(imgInputs).map(i=>i.value);
+      newS.adFree = loadSettings().adFree;
+      newS.adFreeExpiry = loadSettings().adFreeExpiry;
+      saveAllSettings(newS);
+    };
+    document.getElementById('addStoryMsgBtn').onclick = () => { const ta = document.getElementById('editStoryMessages'); ta.value += '\nNew message here... 💕'; };
+
+    initNormalModeMain();
+  </script>
+</body>
+</html>
